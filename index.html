@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gruesome Foursome – Betting Board</title>
+<meta name="description" content="Place your bets for the Gruesome Foursome Golf Invitational, Saturday Oct 24, 2026.">
+<meta property="og:title" content="Gruesome Foursome – Betting Board">
+<meta property="og:description" content="Live odds and bets for the Gruesome Foursome Golf Invitational.">
+<meta name="theme-color" content="#0B3B27">
+<!--
+  Wrapper for the Gruesome betting board.
+  Showing the Google Apps Script board inside this page avoids Google's
+  "Sorry, unable to open the file at this time" error on phones that are
+  signed into more than one Google account. Bets still go to the same
+  official Google Sheet.
+-->
+<style>
+  :root { --pine:#0B3B27; --gold:#E4B73F; --cream:#F7F1E1; }
+  html, body { margin:0; height:100%; background:var(--pine); }
+  body { display:flex; flex-direction:column; font-family: Georgia, serif; }
+  iframe { flex:1 1 auto; width:100%; border:0; display:block; background:var(--pine); }
+  .help { flex:none; text-align:center; padding:6px 16px calc(6px + env(safe-area-inset-bottom)); font-size:13px; color:var(--cream); background:#082D1E; }
+  .help a { color:var(--gold); }
+</style>
+</head>
+<body>
+<iframe id="board" title="Gruesome Foursome betting board"
+  src="https://script.google.com/macros/s/AKfycbzqYnwKnEk3m0WYZ2x3F2F-MELeh5rflv2SpNWGB4lKa4m1Nl9FaC4Uij9ovRTfJM2W/exec"
+  allow="clipboard-write"></iframe>
+<div class="help">Board not loading? <a href="https://script.google.com/macros/s/AKfycbzqYnwKnEk3m0WYZ2x3F2F-MELeh5rflv2SpNWGB4lKa4m1Nl9FaC4Uij9ovRTfJM2W/exec" target="_blank" rel="noopener">Open it directly</a></div>
+</body>
+</html>
