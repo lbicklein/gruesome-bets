@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Rough-draft demo of the Gruesome Foursome live scorecard, leaderboard and Acorns course map. Sample scores only.">
+<meta property="og:title" content="Gruesome Live (demo)">
+<meta property="og:description" content="Live scorecard, leaderboard and course map for the Gruesome Foursome Golf Invitational. Sample scores only.">
+<meta name="theme-color" content="#0B2C1D">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Gruesome Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Oswald:wght@400..700&family=Public+Sans:wght@400..700&display=swap">
+<style>
+/* Layout: one phone-width column, a dashed "prototype controls" strip on top, app screens below, tab bar fixed to the bottom. Single deliberate look: Gruesome crest green, cream and gold. */
+:root{
+  --pine:#0B2C1D; --pine-2:#123D29; --pine-3:#1B5236; --line:#2E6B48;
+  --cream:#F4EFE0; --cream-2:#FBF8EE; --sand:#D9CFB2; --ink:#173A2A; --muted:#4E6357; --mist:#A9C2B1;
+  --gold:#E2B53E; --gold-ink:#7A5B0F; --red:#B8262F; --good:#1F6B3F; --warn:#9A6A0B;
+  --display:'Libre Caslon Text', Georgia, serif; --label:Oswald, 'Arial Narrow', Arial, sans-serif; --body:'Public Sans', Arial, sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--pine);color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--pine)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px calc(96px + env(safe-area-inset-bottom,0px))}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.lbl{font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+
+/* prototype strip */
+.proto{border:1.5px dashed var(--gold);border-radius:14px;padding:10px 12px;display:grid;gap:8px;background:rgba(226,181,62,.06)}
+.proto-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.proto .lbl{color:var(--gold)}
+.proto select{flex:1;min-width:0;background:var(--pine-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.proto input[type=range]{flex:1;min-width:120px;accent-color:var(--gold)}
+.clock{font-family:var(--label);font-size:18px;min-width:76px;text-align:right}
+.chip-btn{background:var(--pine-2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--label);letter-spacing:.06em;font-size:13px}
+
+/* header */
+.head{display:flex;align-items:center;gap:12px;margin:14px 0 10px}
+.head img{width:52px;height:52px}
+.head h1{font-family:var(--display);font-size:24px;line-height:1.1;margin:0}
+.head .who{color:var(--mist);font-size:13px}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--pine-2);border-top:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+.tabs-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{background:none;border:0;border-radius:12px;padding:8px 4px;font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--mist)}
+.tab[aria-selected=true]{background:var(--gold);color:var(--pine)}
+
+.card{background:var(--cream);color:var(--ink);border-radius:18px;padding:16px}
+.stack{display:grid;gap:12px}
+.note{border-radius:14px;padding:12px 14px;font-size:14px}
+.note.gold{background:rgba(226,181,62,.14);border:1px solid rgba(226,181,62,.5);color:var(--cream)}
+.note.dim{background:var(--pine-2);border:1px solid var(--line);color:var(--mist)}
+.note b{color:var(--cream)}
+
+/* scorecard */
+.hole-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.hole-no{font-family:var(--display);font-size:64px;line-height:.9;font-weight:700}
+.hole-meta{font-family:var(--label);font-size:15px;color:var(--muted);text-align:right}
+.pace{font-size:13px;color:var(--muted)}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:var(--pine);color:var(--cream);border-radius:16px;padding:12px 14px}
+.step{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--line);background:var(--pine-3);font-size:30px;line-height:1}
+.score-big{text-align:center}
+.score-big .v{font-family:var(--label);font-size:60px;font-weight:600;line-height:1}
+.score-big .t{font-family:var(--label);letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--gold)}
+.drives{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.drive{border:1.5px solid var(--sand);background:var(--cream-2);border-radius:12px;padding:12px 8px;font-weight:600;color:var(--ink)}
+.drive[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--pine)}
+.quota{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.q{border-radius:10px;padding:6px 4px;text-align:center;font-family:var(--label);font-size:13px;letter-spacing:.04em}
+.q.ok{background:var(--good);color:var(--cream)}
+.q.pend{background:rgba(226,181,62,.35);color:var(--ink);border:1.5px solid var(--gold)}
+.q.need{border:1.5px dashed var(--red);color:var(--red)}
+.warn{font-size:14px;font-weight:600}
+.warn.red{color:var(--red)} .warn.amber{color:var(--warn)} .warn.ok{color:var(--good)}
+.save{width:100%;border:0;border-radius:999px;padding:16px;background:var(--gold);color:var(--pine);font-family:var(--label);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:16px}
+.save:disabled{background:var(--sand);color:var(--muted);cursor:not-allowed}
+.ghost{width:100%;border:1px solid var(--sand);background:none;border-radius:999px;padding:12px;color:var(--muted);font-family:var(--label);letter-spacing:.1em;text-transform:uppercase}
+.sg{display:flex;gap:12px;align-items:flex-start;background:var(--pine);color:var(--cream);border-radius:14px;padding:14px}
+.sg input{width:26px;height:26px;accent-color:var(--gold);flex:none;margin-top:2px}
+.strip{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.cell{border-radius:8px;padding:4px 0 5px;text-align:center;background:var(--pine);color:var(--mist);border:1px solid var(--line);font-family:var(--label);line-height:1.15}
+.cell small{display:block;font-size:10px;opacity:.75}
+.cell .s{font-size:16px}
+.cell.done{color:var(--cream)}
+.cell.under .s{color:#F2A3A8}
+.cell.cur{border-color:var(--gold);color:var(--gold)}
+.cell.edit{outline:2px solid var(--gold)}
+
+/* board */
+.rows{display:grid}
+.row{display:grid;grid-template-columns:30px 36px minmax(0,1fr) 34px 50px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand)}
+.row:last-child{border-bottom:0}
+.row.me{background:rgba(226,181,62,.18);border-radius:12px;margin:0 -8px;padding:10px 8px}
+.pos{font-family:var(--label);font-size:20px;font-weight:600}
+.bub{width:34px;height:34px;border-radius:50%;background:var(--pine);color:var(--cream);display:grid;place-items:center;font-family:var(--label);font-size:13px;border:2.5px solid var(--line)}
+.bub.lead{border-color:var(--gold)}
+.tname{font-family:var(--display);font-weight:700;font-size:16px;line-height:1.2;min-width:0}
+.tsub{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.thru{font-family:var(--label);font-size:16px;text-align:center}
+.par{font-family:var(--label);font-size:24px;font-weight:600;text-align:right}
+.par.under{color:var(--red)}
+.lock{font-family:var(--label);font-size:13px;color:var(--muted);text-align:right;letter-spacing:.06em}
+.can{display:inline-block;font-family:var(--label);font-size:10px;letter-spacing:.06em;padding:1px 5px;border-radius:5px;border:1px solid var(--sand);color:var(--muted)}
+.can.on{background:var(--gold);border-color:var(--gold);color:var(--pine)}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:2px 0 4px}
+.sec-h h2{font-family:var(--display);font-size:18px;margin:0}
+.sec-h .lbl{color:var(--gold-ink)}
+.skins{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.skin{border-radius:8px;padding:4px 2px;text-align:center;font-family:var(--label);font-size:11px;background:var(--cream-2);border:1px solid var(--sand);color:var(--muted);line-height:1.2}
+.skin.won{background:var(--gold);border-color:var(--gold);color:var(--pine)}
+
+/* map */
+.map-box{background:#163F2A;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.map-box svg{display:block;width:100%;height:auto;max-height:70vh}
+.map-ctl{display:flex;gap:6px;flex-wrap:wrap}
+.map-ctl .chip-btn[aria-pressed=true]{background:var(--gold);color:var(--pine);border-color:var(--gold)}
+.tb{transition:transform .9s cubic-bezier(.3,.8,.3,1)}
+.tb{cursor:pointer}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mist)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:5px}
+.info{display:grid;gap:4px}
+.info h3{font-family:var(--display);margin:0;font-size:20px}
+
+/* rules */
+.rules{display:grid;gap:10px;counter-reset:r}
+.rule{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.rule .n{font-family:var(--label);font-size:22px;color:var(--gold-ink);font-weight:600}
+.tag{display:inline-block;margin-top:4px;font-family:var(--label);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:var(--good);color:var(--cream);border-radius:6px;padding:2px 7px}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--cream);color:var(--ink);border-radius:999px;padding:10px 18px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){.tb{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <section class="proto" aria-label="Prototype controls">
+    <div class="proto-row"><span class="lbl">Prototype · view as</span>
+      <select id="viewAs" aria-label="View the app as"></select></div>
+    <div class="proto-row"><span class="lbl">Clock</span>
+      <input id="clock" type="range" min="500" max="975" step="1" aria-label="Time of day">
+      <span class="clock num" id="clockLbl"></span>
+      <button class="chip-btn" id="play" type="button">Play</button></div>
+  </section>
+
+  <header class="head">
+    <img alt="Gruesome Foursome crest" src="data:image/webp;base64,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">
+    <div><h1>Gruesome Live</h1><div class="who" id="who"></div></div>
+  </header>
+
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="Screens"><div class="tabs-in" role="tablist">
+  <button class="tab" role="tab" id="t-card" data-tab="card">Card</button>
+  <button class="tab" role="tab" id="t-board" data-tab="board">Board</button>
+  <button class="tab" role="tab" id="t-map" data-tab="map">Map</button>
+  <button class="tab" role="tab" id="t-rules" data-tab="rules">Rules</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const GEO = `course||878,1076 734,1139 684,997 681,495 236,496 235,88 1042,89 1037,903 996,918 948,958 936,1053
+water_hazard||302,260 307,236 301,222 299,200 306,186 322,180 327,169 344,167 357,169 364,173 388,164 410,176 434,175 441,180 442,196 437,215 425,227 405,233 396,232 371,221 363,220 343,227 325,230 323,234 324,239 328,244 341,251 359,256 365,262 357,275 346,285 332,286 325,276 310,271
+water_hazard||464,113 458,107 452,106 441,108 435,112 426,112 419,103 402,102 396,103 394,106 395,111 412,120 416,127 429,132 456,125 461,121
+water_hazard||464,113 469,115 476,114 485,108 494,115 494,118 489,126 478,127 458,123 463,118
+water_hazard||934,229 931,227 929,219 941,187 945,183 950,187 951,196 958,208 970,215 996,218 1001,225 999,237 991,256 977,253
+water_hazard||905,187 901,187 900,192 910,209 923,214 928,198
+water_hazard||878,210 863,202 858,206 859,211 871,229 879,227 885,218
+water_hazard||716,534 732,508 733,502 729,492 730,483 733,480 737,481 743,492 745,510 749,514 769,510 776,510 780,513 785,521 798,530 817,567 828,599 828,615 833,635 832,666 829,678 815,697 826,759 831,768 827,779 818,778 803,763 790,743 777,741 748,746 742,738 741,733 745,720 741,711 741,705 749,692 751,683 753,666 750,637 758,616 756,610 751,607 740,608 724,602 711,603 705,601 701,584 702,576 706,568 723,555 724,552 724,548 716,540
+water_hazard||732,447 724,450 725,464 731,467 741,464 743,458 741,448
+water_hazard||458,453 462,441 473,433 516,418 523,414 529,406 556,405 607,413 609,405 605,401 609,385 604,373 597,366 607,362 618,369 622,378 622,386 620,396 614,405 613,416 617,428 615,433 603,433 593,427 562,420 530,426 494,440 485,451 469,459 461,459 458,457
+water_hazard||675,690 678,665 676,636 671,623 653,600 642,580 633,557 619,539 599,526 570,522 540,521 513,532 492,547 486,569 491,591 481,600 470,599 457,592 436,590 422,602 403,642 407,662 416,677 419,691 415,704 417,723 425,735 439,740 453,733 488,689 508,696 513,710 500,729 489,740 480,756 493,772 519,779 544,783 566,772 584,775 602,771 612,763 616,746 624,729 636,714
+water_hazard||808,871 805,864 811,862 828,875 834,887 833,903 825,915 812,922 793,922 785,919 780,912 774,890 776,889 784,894 803,889 811,881
+water_hazard||888,994 878,999 868,1010 865,1017 866,1024 884,1033 897,1032 905,1027 910,1013 909,1003 900,997
+water_hazard||934,915 935,893 933,891 907,893 898,897 897,905 899,909 915,925 921,937 926,941 933,937 936,931
+water_hazard||901,600 901,607 906,621 908,624 916,625 920,619 916,607 910,602
+water_hazard||188,225 220,231 230,228 234,219 237,195 234,172 233,130 226,116 197,100 181,99 175,90 176,79 187,71 197,77 227,87 244,83 260,71 271,71 298,87 317,83 321,75 318,67 309,63 297,62 275,67 268,66 262,62 259,41 253,26 243,15 228,4 215,0 203,3 139,46 114,59 83,69 68,70 57,75 18,100 3,115 0,125 2,135 9,148 20,152 47,148 57,154 64,162 68,179 75,183 116,191
+water_hazard||207,315 75,329 60,327 46,342 39,356 47,391 54,398 94,389 112,389 136,404 151,420 152,427 159,431 224,425 232,419 237,407 234,357 226,337 211,317
+water_hazard||221,434 146,443 123,466 110,474 107,480 108,486 113,490 176,487 212,488 237,485 246,480 250,473 246,453 243,446 233,441 227,435
+fairway||699,711 711,720 716,719 723,706 725,637 723,628 710,620 700,625 697,632
+fairway||530,450 577,449 590,453 593,457 591,462 583,470 562,481 526,478 472,485 442,485 405,477 385,483 378,470 380,455 388,451 415,447 465,469 485,459
+fairway||559,165 632,174 674,171 699,173 709,170 715,164 726,162 747,168 764,162 790,163 841,155 847,158 857,174 856,183 849,190 829,192 795,202 768,201 730,187 706,189 698,194 680,196 645,195 595,201 569,196 551,196 544,190 539,183 541,175 545,170
+fairway||629,108 620,108 609,103 606,105 604,127 617,132 720,126 787,129 795,127 804,117 798,107 785,104 699,104 669,109
+fairway||1000,348 996,326 1002,313 1013,304 1020,308 1023,314 1028,355 1032,471 1029,494 1017,510 1001,515 994,513 991,508 991,497 1007,452
+fairway||1008,826 1023,830 1027,835 1028,865 1017,886 1003,889 991,882 991,872 1001,835
+fairway||950,937 944,933 940,915 944,907 950,903 970,905 974,913 971,928 967,932
+fairway||879,808 896,810 900,794 896,771 899,758 915,730 953,696 949,684 945,681 932,681 919,695 880,753 869,785 872,799
+fairway||890,489 898,536 896,545 880,548 868,541 860,516 859,494 847,470 850,464 857,461 884,459 898,439 914,439 921,443 926,451 925,458 892,477
+fairway||753,337 741,333 720,337 711,346 717,355 727,361 746,359 768,365 783,363 802,366 809,363 812,358 810,347 799,341
+fairway||428,303 377,317 368,332 368,345 372,348 380,348 399,331 413,326 467,321 495,328 516,337 541,333 543,327 543,319 539,315 485,294 466,290 446,289
+fairway||496,388 527,371 554,371 593,377 599,383 601,391 591,401 542,394 508,404 494,397
+fairway||652,384 673,381 707,384 767,396 772,406 765,414 751,419 652,407 646,401 643,392
+fairway||500,254 503,243 510,237 522,236 565,245 603,244 645,251 667,250 684,257 717,254 788,261 804,252 814,253 835,274 834,284 828,291 800,285 752,286 717,274 673,276 664,270 628,269 610,265 567,275 522,270 510,268 502,263
+fairway||258,262 254,266 248,288 251,312 264,344 264,401 268,408 284,410 291,407 294,400 294,388 283,352 284,321 265,266
+fairway||853,625 853,653 838,678 832,706 836,729 848,734 866,689 879,635 870,622 865,620 859,619
+green||961,652 960,659 963,664 967,666 979,662 989,663 991,660 987,654 972,649 966,649
+green||940,442 945,446 951,448 961,444 965,440 965,437 960,434 950,437 939,435 936,438
+green||666,343 667,350 671,354 684,353 689,351 691,348 691,340 687,335 680,332 670,334 666,340
+green||347,328 342,334 337,344 339,352 346,355 355,353 359,350 359,337 361,331 360,328 353,324 348,326
+green||298,156 290,156 287,161 288,164 295,173 308,176 313,173 319,163 324,159 325,152 322,147 317,144 311,146 308,150
+green||343,105 342,114 347,122 361,122 366,119 369,114 370,107 368,102 354,102 346,100 343,103
+green||573,105 568,108 564,113 563,120 565,125 572,128 577,128 581,125 588,115 595,111 595,108 594,106 585,103
+green||868,171 866,175 869,181 872,183 876,193 880,195 885,193 887,191 887,188 883,172 881,170 873,168 869,169
+green||843,279 841,284 843,289 856,299 864,300 868,297 871,290 867,285 859,284 849,276 846,276
+green||952,179 961,200 966,201 968,195 965,178 961,174 954,173
+green||985,538 983,554 974,568 974,572 979,575 982,575 987,571 987,562 995,548 995,541 993,538 991,536
+green||884,923 888,916 895,916 900,924 910,932 912,938 909,945 904,947 890,943 890,936
+green||781,865 778,871 781,879 785,884 794,886 801,883 803,879 799,871 797,865 797,858 795,855 790,856
+green||812,818 810,822 812,827 815,830 821,832 828,829 834,816 832,813 826,812 817,814
+green||776,761 765,764 761,770 762,773 765,776 771,778 776,787 780,789 784,788 786,786 786,783 783,775 782,764 780,761
+green||712,503 700,520 702,528 706,531 714,526 724,513 726,507 725,503 718,498 715,499
+green||787,415 788,420 793,426 811,430 816,429 817,427 817,420 814,416 804,413 796,408 789,409
+green||345,445 345,448 349,454 348,467 350,471 356,474 364,474 367,471 368,451 366,447 351,442 347,442
+green||285,432 276,439 274,447 278,452 279,459 290,465 297,466 301,463 302,460 301,454 298,450 298,438 296,434 289,430
+bunker||873,685 872,691 876,692 884,681 881,677 876,676
+bunker||883,658 877,659 877,669 882,663 889,661 888,657
+bunker||892,717 883,714 882,712 887,706 890,705 893,707 890,711 893,715
+bunker||900,690 896,697 896,700 899,703 902,702 900,698 901,696 905,695 906,693 906,690
+bunker||919,685 926,679 926,674 920,674
+bunker||847,496 847,487 843,485 841,486 840,492 843,499 842,504 849,509 851,507
+bunker||682,365 682,369 694,368 696,360 693,359 691,361 679,363
+bunker||698,321 699,325 697,327 690,327 692,330 702,327 702,320 697,318
+bunker||452,334 465,335 468,333 468,329 462,330 456,328 450,331
+bunker||277,154 273,156 273,158 275,164 281,168 282,165 280,155
+bunker||333,115 337,117 338,113 335,112
+bunker||337,126 339,128 342,127 341,123 339,122 337,123
+bunker||350,130 354,133 356,129 352,128
+bunker||586,129 579,135 580,138 584,138 588,130 591,130 595,137 600,137 600,134 593,122 589,122
+bunker||559,238 569,241 567,234 564,236 561,236 560,234 553,234 550,237 552,239
+bunker||613,275 626,275 630,273 632,277 631,279 621,280 616,278 614,280 611,278
+bunker||851,303 856,307 868,306 870,307 870,312 868,314 858,310 855,314 853,314 851,307 844,302 845,299 848,299
+bunker||862,162 865,158 869,159 867,164 861,165
+bunker||864,184 861,188 866,190 868,187
+bunker||1018,890 1020,888 1025,890 1024,895 1020,896 1017,894
+bunker||1006,897 1008,902 1011,901 1012,897 1010,894 1007,892 1005,893
+bunker||365,431 363,434 365,437 371,439 373,444 377,446 381,435 371,434 368,429
+bunker||390,437 388,441 390,444 401,446 403,443 402,439 394,436
+bunker||269,426 272,428 273,434 280,431 283,426 282,424 279,428 275,429 273,422 270,422 268,424
+bunker||295,341 293,344 298,347 297,354 300,354 307,342 306,340 302,342
+cartpath||322,414 316,369 319,342 293,312 298,254 294,222 283,207 279,174 269,158 297,131 322,132 343,144 470,174 510,161 611,164 637,159 738,155 780,159 866,150 896,158 947,139 970,138 972,129 966,114 956,104 911,96 521,94 453,98 335,92 307,110 264,111 253,117 251,144 240,159 243,215 228,255 225,290 256,341 253,400 259,423 259,460 268,473 293,482 312,474 322,453
+cartpath||861,964 858,950 862,895 875,887 909,818 909,773 916,759 965,708 986,679 1011,670 1002,645 981,630 966,612 960,612 953,629 945,629 917,584 920,556 901,514 902,495 913,474 955,467 965,461 979,427 978,415 956,402 908,385 869,383 851,358 796,330 750,318 699,315 655,298 618,293 576,300 538,300 507,296 481,284 432,286 381,307 369,307 366,296 377,249 409,251 468,220 487,215 533,229 568,225 580,236 593,231 615,236 633,234 665,245 755,250 813,247 833,263 878,275 889,285 896,300 903,298 925,258 924,222 942,167 1002,155 1014,159 1015,166 1013,208 1019,231 1030,354 1035,481 1025,512 1004,534 1001,579 1011,627 1026,657 1022,675 1038,690 1038,710 1005,777 1001,817 985,858 983,914 978,926 957,949 947,953 869,964
+cartpath||869,964 854,1004 847,999 832,986 818,957 775,919 757,867
+cartpath||789,807 798,808 803,826 833,850 842,879 862,895
+cartpath||688,819 690,807 699,802 700,794
+cartpath||438,394 513,358 602,347 614,350 622,359 627,371 629,408 638,417 686,415 716,426 740,427 762,418 771,420 780,435 784,468 806,527 846,621 851,650 840,661 827,706 839,759 832,785 812,790 789,807 776,805 749,788 725,798
+cartpath||762,850 801,821
+cartpath||729,809 725,798
+cartpath||854,1004 847,1022
+cartpath||869,964 875,887
+cartpath||725,798 707,799 700,794 689,767 689,495 685,491 653,489 605,477 542,492 393,492 348,485 333,477 324,465 322,414 345,402 400,409 438,394
+clubhouse||775,810 757,792 740,809 751,819 752,817 761,825 758,828 761,831 759,833 763,837 765,835 768,839 775,832 776,834 788,819 777,808
+hole|1|848,982 889,757 969,658
+hole|2|1017,660 872,492 954,441
+hole|3|934,402 772,350 678,343
+hole|4|679,299 457,308 347,344
+hole|5|342,235 538,254 746,267 856,289
+hole|6|880,338 959,185
+hole|7|1024,121 1013,337 1020,485 981,566
+hole|8|1033,674 1011,870 897,933
+hole|9|843,1002 789,867
+hole|10|697,871 711,647 713,513
+hole|11|674,472 483,472 357,454
+hole|12|313,325 311,157
+hole|13|373,158 635,185 803,178 879,184
+hole|14|957,125 709,117 571,116
+hole|15|535,105 351,114
+hole|16|250,104 271,328 287,447
+hole|17|329,400 542,382 716,399 802,420
+hole|18|773,464 862,654 772,770`;
+
+/* ---------- course ---------- */
+const PAR=[4,4,4,4,5,3,5,4,3,4,4,3,5,4,3,4,5,4];
+const YDS=[385,343,320,335,560,130,466,344,149,360,336,170,520,399,180,380,525,350];
+const HCP=[5,7,17,13,9,11,1,3,15,6,12,18,16,4,8,14,10,2];
+const PACE=[15,30,45,60,82,90,113,128,135,150,165,173,195,210,218,233,255,270]; // from the Acorns card, minutes after tee
+const FIRST=8*60+40, GAP=8;
+
+/* ---------- field: tee sheet order, rosters from The Draft 2026 ---------- */
+const TEAMS=[
+ ['Fleischauer','TF',['Tim','Polovich','Quinlan','Conway']],
+ ['Allen','DA',['DA','Cygan','Goldy','Riddle']],
+ ['Wetz','LW',['Wetz','J Campbell','Delsha','JQ']],
+ ['Witt','JW',['Witt','Bo','C Schaefer','Marsala']],
+ ['Fannon','FN',['Fannon','Milk','T Sigs','Banker']],
+ ['Skaer','AS',['Skaer','Koonce','S Andres','Luke Bick']],
+ ['Jon Pickett','JP',['Jon','Dallas','T Rick','DJ']],
+ ['McRoberts','BM',['McRob','Vijay','B Johnson','J Anderson']],
+ ['Arab','AR',['Arab','Bednar','Danny Bick','Kossina']],
+ ['Schultheis','DS',['Drew','Nick Scott','Alex','Steve Lee']],
+ ['Matt Scott','MS',['Matt','Jordy','Eli','Caywood']],
+ ['Cappel','CA',['Cappel','Keegan','S Dodd','Coz']],
+ ['Bretwisch','BR',['Bretwisch','Rodenberg','Signore','Gehring']],
+ ['Dillenberger','BD',['Dilly','Nevois','T Wetz','Laz']],
+ ['Wirth','WI',['Wirth','Nate Vogt','Minnaert','T Henry']],
+ ['Chris Pickett','CP',['C Pickett','Schrock','Kohler','Diesel']],
+].map(([name,ini,roster],i)=>({i,name:'Team '+name,short:name,ini,roster,tee:FIRST+GAP*i}));
+
+/* ---------- simulated round (stands in for the Google Sheet) ---------- */
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const SIM=TEAMS.map(t=>{
+  const r=rng(1000+t.i*77), str=(r()-.5)*.18, f=.93+r()*.12;
+  const scores=PAR.map(p=>{const x=r();const pE=p===5?.07:p===4?.012:0;const pB=(p===5?.55:p===4?.36:.24)+str;const pBo=.07;
+    return x<pE?p-2:x<pE+pB?p-1:x>1-pBo?p+1:p});
+  const finish=PACE.map((m,h)=>Math.round(m*f+(h>=5?3:0)+(h>=11?3:0)));
+  const drives=new Array(18);
+  [[0,9],[9,18]].forEach(([a,b])=>{const holes=[];for(let h=a;h<b;h++)holes.push(h);
+    for(let k=holes.length-1;k>0;k--){const j=Math.floor(r()*(k+1));[holes[k],holes[j]]=[holes[j],holes[k]]}
+    holes.forEach((h,k)=>drives[h]=k<4?k:(r()<.6?0:Math.floor(r()*4)))});
+  return{scores,finish,drives,sg:{6:r()<.88,12:r()<.85}};
+});
+
+/* ---------- state ---------- */
+const S={view:'c5',tab:'card',clock:11*60+20,entries:TEAMS.map(()=>({scores:{},drives:{},sg:{}})),draft:null,edit:null,signed:{},mapZoom:'all',sel:null,playing:null};
+const viewer=()=>S.view==='pub'?{kind:'pub'}:S.view==='op'?{kind:'op'}:{kind:'cap',t:+S.view.slice(1)};
+
+function simDone(t){const e=S.clock-TEAMS[t].tee;if(e<0)return 0;let n=0;while(n<18&&SIM[t].finish[n]<=e)n++;return n}
+function entered(t){let n=0;while(n<18&&S.entries[t].scores[n]!=null)n++;return n}
+function done(t){return Math.max(simDone(t),entered(t))}
+function score(t,h){const v=S.entries[t].scores[h];return v!=null?v:SIM[t].scores[h]}
+function drive(t,h){const v=S.entries[t].drives[h];return v!=null?v:SIM[t].drives[h]}
+function shotgun(t,stop){const v=S.entries[t].sg[stop];if(v!=null)return v;return done(t)>=stop-1&&S.clock-TEAMS[t].tee>SIM[t].finish[stop-2]+2?SIM[t].sg[stop]:null}
+function toPar(t){let s=0;for(let h=0;h<done(t);h++)s+=score(t,h)-PAR[h];return s}
+const allDone=()=>TEAMS.every(t=>done(t.i)===18);
+function canSee(v,t){if(v.kind==='op')return true;if(v.kind==='pub')return allDone();if(t===v.t)return true;if(done(v.t)===18)return true;return t>v.t}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function fmt(m){m=Math.round(m);let h=Math.floor(m/60),mm=m%60,ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+String(mm).padStart(2,'0')+' '+ap}
+const fp=n=>n===0?'E':n>0?'+'+n:'−'+Math.abs(n);
+const nameFor=d=>({'-2':'Eagle','-1':'Birdie','0':'Par','1':'Bogey','2':'Double'})[d]||(d<-2?'Albatross':'+'+d);
+function paceState(t){const T=TEAMS[t],d=done(t);if(S.clock<T.tee)return{txt:'Tees off '+fmt(T.tee),k:'wait'};if(d===18)return{txt:'Finished',k:'fin'};
+  let exp=0;while(exp<18&&T.tee+PACE[exp]+6<=S.clock)exp++;return exp-d>=1?{txt:'Behind pace',k:'behind'}:{txt:'On pace',k:'ok'}}
+function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
+
+/* ---------- final order with house tie-break rules ---------- */
+function ranked(ids){
+  const arr=ids.slice().sort((a,b)=>toPar(a)-toPar(b)||done(b)-done(a));
+  const finalMode=ids.length===16&&allDone();
+  const order=HCP.map((x,h)=>[x,h]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+  if(finalMode){arr.sort((a,b)=>{const d=toPar(a)-toPar(b);if(d)return d;if(toPar(a)===toPar(arr[0]))return 0;for(const h of order){const x=score(a,h)-score(b,h);if(x)return x}return 0})}
+  let out=[],prev=null,pos=0;
+  arr.forEach((t,k)=>{const tp=toPar(t);let label;
+    if(finalMode){const tiedLead=arr.filter(x=>toPar(x)===toPar(arr[0])).length>1;
+      if(tiedLead&&tp===toPar(arr[0]))label='P';else label=String(k+1)}
+    else{if(prev===null||tp!==prev){pos=k+1}label=(arr.filter(x=>toPar(x)===tp).length>1?'T':'')+pos}
+    prev=tp;out.push({t,label})});
+  return{rows:out,finalMode};
+}
+
+/* ---------- views ---------- */
+function renderWho(){const v=viewer();
+  $('#who').textContent=v.kind==='pub'?'Public board · bettors, spectators, clubhouse TV':v.kind==='op'?'Operator view · sees every score live':`Captain · ${TEAMS[v.t].name} · ${fmt(TEAMS[v.t].tee)} tee`}
+
+function viewCard(){const v=viewer();
+  if(v.kind!=='cap')return`<div class="note dim">Captains log scores here. Pick a captain under <b>View as</b> to try the scorecard.</div>`;
+  const t=v.t,T=TEAMS[t],d=done(t);
+  if(d===18&&S.edit==null)return finishedCard(t);
+  const h=S.edit!=null?S.edit:d;
+  if(S.draft==null||S.draft.h!==h)S.draft={h,score:S.edit!=null?score(t,h):PAR[h],drive:S.edit!=null?drive(t,h):null};
+  const D=S.draft,diff=D.score-PAR[h];
+  const nineA=h<9?0:9,nineB=nineA+9;
+  // quota: drives already used on this nine (excluding this hole), plus the current pick
+  const used=[[],[],[],[]];for(let k=nineA;k<nineB;k++){if(k===h)continue;if(k<d){used[drive(t,k)].push(k+1)}}
+  if(D.drive!=null)used[D.drive].push(h+1);
+  const need=used.map((u,i)=>u.length?null:i).filter(x=>x!=null);
+  const left=Math.max(0,nineB-1-Math.max(h,d-1));
+  const slots=left+(D.drive==null?1:0);
+  let warn;
+  if(!need.length)warn=`<div class="warn ok">Quota met for the ${nineA?'back':'front'} nine.</div>`;
+  else if(need.length>slots)warn=`<div class="warn red">Quota can’t be met: ${need.map(i=>esc(T.roster[i])).join(', ')} still ${need.length>1?'need drives':'needs a drive'} and only ${slots} hole${slots===1?'':'s'} left on this nine.</div>`;
+  else if(need.length===slots)warn=`<div class="warn amber">Every hole left on this nine${D.drive==null?', including this one,':''} must be a drive from ${need.map(i=>esc(T.roster[i])).join(' or ')}.</div>`;
+  else warn=`<div class="warn amber">Still need a drive from ${need.map(i=>esc(T.roster[i])).join(', ')} · ${slots} hole${slots===1?'':'s'} left on this nine.</div>`;
+  const stop=h===5?6:h===11?12:null;
+  const sgDone=stop?shotgun(t,stop):null;
+  const ctp=h===8||h===14;
+  const pace=paceState(t);
+  return`<div class="stack">
+  ${S.clock<T.tee?`<div class="note dim">Your tee time is <b>${fmt(T.tee)}</b>. Move the clock to play out the field, or start logging now.</div>`:''}
+  <div class="card stack">
+    <div class="hole-head"><div><div class="lbl" style="color:var(--gold-ink)">${S.edit!=null?'Editing hole':'Hole'}</div><div class="hole-no">${h+1}</div></div>
+      <div class="hole-meta num">Par ${PAR[h]} · ${YDS[h]} yds${h===17?' (white)':''}<br>HCP ${HCP[h]}<div class="pace">Card pace: done by ${fmt(T.tee+PACE[h])} · ${pace.txt}</div></div></div>
+    ${stop&&S.edit==null?`<label class="sg"><input type="checkbox" id="sgBox" ${sgDone?'checked':''}><span><span class="lbl" style="color:var(--gold)">Shotgun stop · before hole ${stop}</span><br>We took our shotguns and sent the video.</span></label>`:''}
+    ${ctp?`<div class="note gold" style="color:var(--ink)"><b style="color:var(--ink)">Closest to the pin.</b> You don’t have to play this ball if you need someone’s quota drive.</div>`:''}
+    <div class="stepper"><button class="step" id="minus" type="button" aria-label="One less stroke">−</button>
+      <div class="score-big"><div class="v num">${D.score}</div><div class="t">${nameFor(diff)}</div></div>
+      <button class="step" id="plus" type="button" aria-label="One more stroke">+</button></div>
+    <div class="lbl" style="color:var(--gold-ink)">Whose drive did you play?</div>
+    <div class="drives">${T.roster.map((p,i)=>`<button class="drive" type="button" data-drive="${i}" aria-pressed="${D.drive===i}">${esc(p)}</button>`).join('')}</div>
+    <div class="lbl" style="color:var(--gold-ink)">${nineA?'Back':'Front'} nine quota · one drive each</div>
+    <div class="quota">${T.roster.map((p,i)=>{const u=used[i];const cur=D.drive===i&&u.length===1&&u[0]===h+1;
+      return`<div class="q ${u.length?(cur?'pend':'ok'):'need'}">${esc(p.split(' ').pop())}<br>${u.length?'#'+u.join(', #'):'—'}</div>`}).join('')}</div>
+    ${warn}
+    <button class="save" id="save" type="button" ${D.drive==null?'disabled':''}>${D.drive==null?'Pick whose drive':S.edit!=null?'Update hole '+(h+1):'Save hole '+(h+1)}</button>
+    ${S.edit!=null?`<button class="ghost" id="cancelEdit" type="button">Cancel</button>`:''}
+  </div>
+  ${strip(t,h)}
+  </div>`}
+
+function strip(t,cur){const d=done(t);const cell=h=>{const s=h<d?score(t,h):null;const cls=['cell',h<d?'done':'',s!=null&&s<PAR[h]?'under':'',h===cur&&S.edit==null?'cur':'',S.edit===h?'edit':''].join(' ');
+    return`<button class="${cls}" type="button" data-hole="${h}" ${h<d?'':'disabled'} aria-label="Hole ${h+1}${s!=null?', '+s:''}"><small>${h+1}</small><span class="s num">${s!=null?s:'·'}</span></button>`};
+  const tp=toPar(t);
+  return`<div class="stack" style="gap:6px"><div class="sec-h"><span class="lbl" style="color:var(--gold)">Your card · tap a hole to fix it</span><span class="lbl num" style="color:var(--cream)">Thru ${d} · ${fp(tp)}</span></div>
+  <div class="strip">${[0,1,2,3,4,5,6,7,8].map(cell).join('')}</div><div class="strip">${[9,10,11,12,13,14,15,16,17].map(cell).join('')}</div></div>`}
+
+function finishedCard(t){const T=TEAMS[t];const tot=PAR.reduce((s,p,h)=>s+score(t,h),0);
+  const misses=[];[[0,9,'front'],[9,18,'back']].forEach(([a,b,n])=>{const c=[0,0,0,0];for(let h=a;h<b;h++)c[drive(t,h)]++;c.forEach((x,i)=>{if(!x)misses.push(`${T.roster[i]} had no drive on the ${n} nine`)})});
+  [6,12].forEach(s=>{if(!shotgun(t,s))misses.push(`No shotgun check before hole ${s}`)});
+  return`<div class="stack"><div class="card stack">
+    <div class="lbl" style="color:var(--gold-ink)">Card complete</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="hole-no num">${tot}</div><div class="hole-meta"><span class="par ${toPar(t)<0?'under':''}">${fp(toPar(t))}</span></div></div>
+    <div class="note ${misses.length?'gold':'dim'}" style="color:var(--ink);background:${misses.length?'rgba(226,181,62,.18)':'var(--cream-2)'};border-color:var(--sand)">${misses.length?'<b style="color:var(--ink)">Check before signing:</b><br>'+misses.map(esc).join('<br>'):'All rules checks passed: quota drives on both nines and both shotgun stops.'}</div>
+    ${S.signed[t]?`<div class="warn ok">Signed by ${esc(T.roster[0])}. Card locked.</div>`:`<button class="save" id="sign" type="button">Sign and lock card</button>`}
+    <div class="note dim" style="background:var(--cream-2);color:var(--muted);border-color:var(--sand)">You’ve finished, so the full leaderboard is now open to you.</div>
+  </div>${strip(t,-1)}</div>`}
+
+function boardRow(t,label,v){const vis=canSee(v,t),me=v.kind==='cap'&&v.t===t,tp=toPar(t),d=done(t),P=paceState(t);
+  const sg=[6,12].map(s=>{const x=shotgun(t,s);return`<span class="can ${x?'on':''}" title="Shotgun before ${s}: ${x?'done':'not yet'}">SG${s}</span>`}).join('');
+  return`<div class="row ${me?'me':''}"><div class="pos num">${vis?label:''}</div><div class="bub ${vis&&label==='1'?'lead':''}">${TEAMS[t].ini}</div>
+  <div style="min-width:0"><div class="tname">${esc(TEAMS[t].short)}</div><div class="tsub">${fmt(TEAMS[t].tee)} · ${P.txt} ${vis?sg:''}</div></div>
+  <div class="thru num">${d===18?'F':d}</div>${vis?`<div class="par num ${tp<0?'under':''}">${d?fp(tp):'–'}</div>`:`<div class="lock">Hidden</div>`}</div>`}
+
+function viewBoard(){const v=viewer();const ids=TEAMS.map(t=>t.i);
+  if(v.kind==='pub'&&!allDone()){const last=Math.max(...TEAMS.map(t=>t.tee+SIM[t.i].finish[17]));
+    return`<div class="stack"><div class="note gold"><b>Scores are hidden until the last group finishes</b> (about ${fmt(last)}). Then the full board is revealed. The map shows where everyone is.</div>
+    <div class="card"><div class="sec-h"><h2>On the course</h2><span class="lbl">Thru</span></div><div class="rows">${ids.slice().sort((a,b)=>done(b)-done(a)||a-b).map(t=>boardRow(t,'',v)).join('')}</div></div></div>`}
+  if(v.kind==='cap'&&done(v.t)<18){const vis=ids.filter(t=>t>=v.t),hid=ids.filter(t=>t<v.t);const R=ranked(vis);
+    return`<div class="stack"><div class="note dim">You see your team and every group that tees off after you. Groups ahead of you stay hidden until you finish.</div>
+    <div class="card"><div class="sec-h"><h2>You and the groups behind you</h2><span class="lbl">Thru · Score</span></div><div class="rows">${R.rows.map(r=>boardRow(r.t,r.label,v)).join('')}</div></div>
+    ${hid.length?`<div class="card"><div class="sec-h"><h2>Teed off ahead of you</h2><span class="lbl">Hidden until you finish</span></div><div class="rows">${hid.map(t=>boardRow(t,'',v)).join('')}</div></div>`:''}</div>`}
+  const R=ranked(ids);
+  const head=R.finalMode?`<div class="note gold"><b>Final results.</b> ${R.rows[0].label==='P'?'Tie for 1st goes to a playoff hole, most likely 18.':''} Ties for 2nd and 3rd are broken on the card from the hardest hole: 7, 18, 8, 14…</div>`:v.kind==='op'?`<div class="note dim">Operator view: every score, live. Captains and the public board don’t see this.</div>`:`<div class="note dim">You’ve finished, so you see the whole field.</div>`;
+  return`<div class="stack">${head}<div class="card"><div class="sec-h"><h2>${R.finalMode?'Final board':'Live board'}</h2><span class="lbl">Thru · Score</span></div><div class="rows">${R.rows.map(r=>boardRow(r.t,r.label,v)).join('')}</div></div>
+  ${(v.kind==='op'||R.finalMode)?skins():''}</div>`}
+
+function skins(){const cells=PAR.map((p,h)=>{const fin=TEAMS.filter(t=>done(t.i)>h).map(t=>t.i);if(!fin.length)return`<div class="skin">${h+1}<br>–</div>`;
+    const best=Math.min(...fin.map(t=>score(t,h)));const w=fin.filter(t=>score(t,h)===best);
+    return`<div class="skin ${w.length===1?'won':''}">${h+1}<br>${w.length===1?TEAMS[w[0]].ini:best}</div>`}).join('');
+  return`<div class="card stack" style="gap:8px"><div class="sec-h"><h2>Skins</h2><span class="lbl">Gold = won outright</span></div><div class="skins">${cells}</div></div>`}
+
+/* ---------- map ---------- */
+const G=GEO.trim().split('\n').map(l=>{const[k,ref,pts]=l.split('|');return{k,ref,pts:pts.split(' ').map(p=>p.split(',').map(Number))}});
+const HOLES=[];G.filter(g=>g.k==='hole').forEach(g=>HOLES[+g.ref-1]=g.pts);
+const CLUB=(()=>{const c=G.find(g=>g.k==='clubhouse').pts;return[c.reduce((s,p)=>s+p[0],0)/c.length,c.reduce((s,p)=>s+p[1],0)/c.length]})();
+const pathD=(pts,close)=>'M'+pts.map(p=>p.join(' ')).join('L')+(close?'Z':'');
+function along(pts,f){let L=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);L+=d}
+  let x=f*L;for(let i=0;i<seg.length;i++){if(x<=seg[i]){const r=seg[i]?x/seg[i]:0;return[pts[i][0]+(pts[i+1][0]-pts[i][0])*r,pts[i][1]+(pts[i+1][1]-pts[i][1])*r]}x-=seg[i]}return pts[pts.length-1]}
+const VB={all:[225,60,830,1095],front:null,back:null};
+['front','back'].forEach((n,k)=>{const ps=HOLES.slice(k*9,k*9+9).flat();const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);const pad=55;VB[n]=[Math.min(...xs)-pad,Math.min(...ys)-pad,Math.max(...xs)-Math.min(...xs)+pad*2,Math.max(...ys)-Math.min(...ys)+pad*2]});
+const BASE=(()=>{const fill={course:'#2A6A43',water_hazard:'#3A7CA0',fairway:'#4E9B60',green:'#8FD3A0',bunker:'#E9DEBB',clubhouse:'#F4EFE0'};
+  let s=`<rect x="-50" y="-50" width="1200" height="1300" fill="#1C4D33"/>`;
+  ['course','water_hazard','fairway','green','bunker'].forEach(k=>G.filter(g=>g.k===k).forEach(g=>{s+=`<path d="${pathD(g.pts,true)}" fill="${fill[k]}"${k==='green'?' stroke="#BFE8C8" stroke-width="1.5"':''}/>`}));
+  G.filter(g=>g.k==='cartpath').forEach(g=>s+=`<path d="${pathD(g.pts)}" fill="none" stroke="#D9CFB2" stroke-opacity=".35" stroke-width="3"/>`);
+  G.filter(g=>g.k==='clubhouse').forEach(g=>s+=`<path d="${pathD(g.pts,true)}" fill="${fill.clubhouse}" stroke="#173A2A" stroke-width="2"/>`);
+  HOLES.forEach((pts,h)=>{s+=`<path d="${pathD(pts)}" fill="none" stroke="#F4EFE0" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="6 7"/>`;
+    const g=pts[pts.length-1];s+=`<line x1="${g[0]}" y1="${g[1]}" x2="${g[0]}" y2="${g[1]-24}" stroke="#F4EFE0" stroke-width="2.5"/><path d="M${g[0]} ${g[1]-24}l14 5l-14 5z" fill="#E2B53E"/>`;
+    const t=pts[0];s+=`<g><circle cx="${t[0]}" cy="${t[1]}" r="15" fill="#0B2C1D" stroke="#F4EFE0" stroke-width="2"/><text x="${t[0]}" y="${t[1]+5.5}" text-anchor="middle" font-family="Oswald, Arial, sans-serif" font-size="16" font-weight="600" fill="#F4EFE0">${h+1}</text></g>`});
+  s+=`<text x="${CLUB[0]-60}" y="${CLUB[1]+44}" font-family="Oswald, Arial, sans-serif" font-size="17" letter-spacing="2" fill="#F4EFE0">CLUBHOUSE</text>`;
+  return s})();
+function bubbleSpots(){const spots={},byHole={},wait=[],fin=[];
+  TEAMS.forEach(T=>{const t=T.i,d=done(t);if(S.clock<T.tee&&d===0)wait.push(t);else if(d===18)fin.push(t);else(byHole[d]=byHole[d]||[]).push(t)});
+  Object.entries(byHole).forEach(([h,ts])=>{ts.sort((a,b)=>a-b);ts.forEach((t,k)=>{spots[t]=along(HOLES[h],Math.min(.1+k*.22,.9))})});
+  wait.forEach((t,k)=>spots[t]=[CLUB[0]+70+(k%4)*58,CLUB[1]+95+Math.floor(k/4)*58]);
+  fin.forEach((t,k)=>spots[t]=[CLUB[0]-230+(k%4)*58,CLUB[1]-40+Math.floor(k/4)*58]);
+  return spots}
+function viewMap(){const v=viewer();const vb=VB[S.mapZoom];const spots=bubbleSpots();
+  const bubs=TEAMS.map(T=>{const t=T.i,[x,y]=spots[t],me=v.kind==='cap'&&v.t===t,sel=S.sel===t;
+    return`<g class="tb" data-team="${t}" style="transform:translate(${x}px,${y}px)" role="button" tabindex="0" aria-label="${esc(T.name)}"><circle r="${me?30:26}" fill="${me?'#E2B53E':'#F4EFE0'}" stroke="${sel?'#E2B53E':me?'#FBF8EE':'#0B2C1D'}" stroke-width="${sel?5:3}"/><text y="7" text-anchor="middle" font-family="Oswald, Arial, sans-serif" font-size="20" font-weight="600" fill="#0B2C1D">${T.ini}</text></g>`}).join('');
+  let info='<div class="note dim">Tap a bubble to see that team.</div>';
+  if(S.sel!=null){const t=S.sel,T=TEAMS[t],d=done(t),P=paceState(t),vis=canSee(v,t);
+    info=`<div class="card info"><div class="lbl" style="color:var(--gold-ink)">${d===18?'Finished':d===0&&S.clock<T.tee?'Waiting to tee off':'On hole '+(d+1)}</div><h3>${esc(T.name)}</h3>
+    <div class="tsub">${esc(T.roster.join(' · '))}</div><div class="num" style="font-size:15px">Thru ${d} · ${vis?(d?fp(toPar(t)):'–'):'score hidden'} · ${P.txt}</div></div>`}
+  return`<div class="stack"><div class="map-ctl">${['all','front','back'].map(z=>`<button class="chip-btn" type="button" data-zoom="${z}" aria-pressed="${S.mapZoom===z}">${{all:'Whole course',front:'Front 9',back:'Back 9'}[z]}</button>`).join('')}</div>
+  <div class="map-box"><svg id="mapsvg" viewBox="${vb.join(' ')}" role="img" aria-label="Acorns Golf Links from above with team positions" xmlns="http://www.w3.org/2000/svg">${BASE}${bubs}</svg></div>
+  <div class="legend"><span><i style="background:var(--gold)"></i>${v.kind==='cap'?'Your team':'Team'}</span><span><i style="background:var(--cream)"></i>Other teams</span><span>Bubble sits on the tee of the next hole</span></div>
+  ${info}</div>`}
+
+/* ---------- rules ---------- */
+const RULES=[
+ ['Tee shot quota: one tee shot must be used per player per nine holes. Mark the drive on the scorecard.',1],
+ ['Beer shotguns: every team member shotguns a beer (and sends the Snapchat video) before holes 6 and 12.',1],
+ ['Closest to the pin on holes 9 and 15. You don’t have to play that ball if you need someone’s quota tee shot.',1],
+ ['Make your tee time. We all know the Dillenberger Debacle of 2018. Be there 20 minutes early.',0],
+ ['You can pull pins. If you don’t, the putt must drop and settle in the hole. Pull out of bunkers.',0],
+ ['No wife beaters. Clothes must stay on.',0],
+ ['Tie for 1st: a playoff hole chosen by the board, most likely 18. If that ties, a putt-off or another option decided by the board.',1],
+ ['Tie for 2nd or 3rd: scorecard playoff starting with the hardest handicap hole (7), then the next hardest, and so on.',1],
+ ['Putt out. No two-putt rule.',0],
+ ['One club length, no closer to the hole, and you can’t improve the cut your ball was in.',0],
+ ['We are not playing bunkers. Pull out, no closer to the hole, and no better angle to the hole.',0],
+];
+function viewRules(){return`<div class="card stack"><div class="sec-h"><h2>Gruesome house rules</h2><span class="lbl">Blue tees · white on 18</span></div>
+ <div class="rules">${RULES.map(([r,tr],i)=>`<div class="rule"><div class="n num">${i+1}</div><div>${esc(r)}${tr?'<br><span class="tag">Tracked in the app</span>':''}</div></div>`).join('')}</div></div>`}
+
+/* ---------- render & events ---------- */
+function render(){renderWho();
+  $('#clockLbl').textContent=fmt(S.clock);$('#clock').value=S.clock;
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===S.tab));
+  const v={card:viewCard,board:viewBoard,map:viewMap,rules:viewRules}[S.tab]();
+  if(S.tab==='map'&&$('#mapsvg')){updateMap();return}
+  $('#view').innerHTML=v}
+function updateMap(){// keep the svg so bubbles animate between spots
+  const v=viewer(),spots=bubbleSpots();$('#mapsvg').setAttribute('viewBox',VB[S.mapZoom].join(' '));
+  document.querySelectorAll('.tb').forEach(g=>{const t=+g.dataset.team,[x,y]=spots[t];g.style.transform=`translate(${x}px,${y}px)`;
+    const me=v.kind==='cap'&&v.t===t,c=g.querySelector('circle');c.setAttribute('r',me?30:26);c.setAttribute('fill',me?'#E2B53E':'#F4EFE0');c.setAttribute('stroke',S.sel===t?'#E2B53E':me?'#FBF8EE':'#0B2C1D');c.setAttribute('stroke-width',S.sel===t?5:3)});
+  const tmp=document.createElement('div');tmp.innerHTML=viewMap();
+  const parts=$('#view').firstElementChild.children;const np=tmp.firstElementChild.children;
+  parts[0].replaceWith(np[0]);parts[2].replaceWith(np[2]);parts[3].replaceWith(np[3]);
+  // np shrinks as nodes move; re-query is enough
+}
+function fullRender(){S.tab==='map'&&$('#mapsvg')&&($('#view').innerHTML='');render()}
+
+const sel=$('#viewAs');
+sel.innerHTML=`<option value="pub">Public board (bettors, TV)</option><option value="op">Operator (sees everything)</option>`+TEAMS.map(t=>`<option value="c${t.i}">Captain · ${esc(t.name)} · ${fmt(t.tee)}</option>`).join('');
+sel.value=S.view;
+sel.onchange=()=>{S.view=sel.value;S.draft=null;S.edit=null;S.sel=null;fullRender()};
+$('#clock').oninput=e=>{S.clock=+e.target.value;S.draft=S.edit!=null?S.draft:null;render()};
+$('#play').onclick=()=>{if(S.playing){clearInterval(S.playing);S.playing=null;$('#play').textContent='Play';return}
+  $('#play').textContent='Pause';S.playing=setInterval(()=>{S.clock=Math.min(975,S.clock+3);if(S.clock>=975){clearInterval(S.playing);S.playing=null;$('#play').textContent='Play'}if(S.edit==null)S.draft=null;render()},350)};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;$('#view').innerHTML='';render();window.scrollTo(0,0)});
+$('#view').addEventListener('click',e=>{const b=e.target.closest('button,[data-team]');if(!b)return;const v=viewer();
+  if(b.id==='minus'&&S.draft.score>1){S.draft.score--;render()}
+  else if(b.id==='plus'&&S.draft.score<10){S.draft.score++;render()}
+  else if(b.dataset.drive!=null){S.draft.drive=+b.dataset.drive;render()}
+  else if(b.id==='save'){const t=v.t,h=S.draft.h,E=S.entries[t];
+    for(let k=0;k<h;k++){if(E.scores[k]==null){E.scores[k]=score(t,k);E.drives[k]=drive(t,k)}}
+    E.scores[h]=S.draft.score;E.drives[h]=S.draft.drive;const wasEdit=S.edit!=null;S.edit=null;S.draft=null;
+    toast(wasEdit?`Hole ${h+1} updated.`:h===17?'Hole 18 saved. Card complete.':`Hole ${h+1} saved. On to the ${h+2} tee.`);render()}
+  else if(b.id==='cancelEdit'){S.edit=null;S.draft=null;render()}
+  else if(b.dataset.hole!=null){S.edit=+b.dataset.hole;S.draft=null;render();window.scrollTo(0,0)}
+  else if(b.id==='sign'){S.signed[v.t]=true;toast('Card signed and locked.');render()}
+  else if(b.dataset.zoom){S.mapZoom=b.dataset.zoom;render()}
+  else if(b.dataset.team!=null){S.sel=+b.dataset.team;render()}});
+$('#view').addEventListener('keydown',e=>{const g=e.target.closest('[data-team]');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();S.sel=+g.dataset.team;render()}});
+$('#view').addEventListener('change',e=>{if(e.target.id==='sgBox'){const v=viewer(),h=S.draft.h;S.entries[v.t].sg[h===5?6:12]=e.target.checked;toast(e.target.checked?'Shotgun logged. Cheers.':'Shotgun unchecked.');render()}});
+render();
+</script>
+
+<p style="text-align:center;font:12px Arial,sans-serif;color:#A9C2B1;padding:0 16px 110px;margin:0">Demo with made-up scores. Map data © <a style="color:#A9C2B1" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.</p>
+</body>
+</html>
